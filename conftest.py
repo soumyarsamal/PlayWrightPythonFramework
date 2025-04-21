@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 from playwrightpython.pages.login import LoginService
 from playwrightpython.utils.api_helpers import APIClient
 from playwrightpython.utils.credential_management import load_credentials, LoginCredentials
-from playwrightpython.utils.database_credential import load_db_credentials, DBDetails
+from playwrightpython.utils.database_credential import load_db_credentials, DBDetails, DBCredDetails
 
 
 @pytest.fixture(scope="session")
@@ -52,13 +52,24 @@ def pytest_addoption(parser):
 @pytest.fixture(scope="session")
 def config(request):
     env = request.config.getoption("--env")  # Get the environment from command line
-    config_file_path = os.path.join("playwrightpython/config", f"{env}.json")
+    #common environment level properties
+    config_file_path = os.path.join(f"playwrightpython/config/{env}", f"{env}.json")
+    environment= 'ift' if 'ift' in env else 'dev'
 
-    credentials_data = load_credentials(config_file_path)
+    # common login credential for dev and ift
+    credential_file_path= os.path.join("playwrightpython/config", f"{environment}_login_credential.json")
+
+    # common DB credential for dev and ift
+    db_cred_file_path= os.path.join("playwrightpython/config", f"{environment}_db_credential.json")
+
+    credentials_data = load_credentials(credential_file_path)
     LoginCredentials.initialize(credentials_data)
 
-    db_credentials_data = load_db_credentials(config_file_path)
-    DBDetails.initialize(db_credentials_data)
+    db_data = load_db_credentials(config_file_path)
+    DBDetails.initialize(db_data)
+
+    db_credentials_data = load_db_credentials(db_cred_file_path)
+    DBCredDetails.initialize(db_credentials_data)
 
     if not os.path.exists(config_file_path):
         pytest.exit(f"Configuration file not found for environment: {env}")

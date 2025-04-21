@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from playwrightpython.utils.database_credential import DBDetails
+from playwrightpython.utils.database_credential import DBDetails, DBCredDetails
 
 
 def fetch_data_from_postgres(query):
@@ -16,8 +16,8 @@ def fetch_data_from_postgres(query):
     try:
         conn = psycopg2.connect(
             dbname=DBDetails.DBNAME.db_value,
-            user=DBDetails.USER.db_value,
-            password=DBDetails.PASSWORD.db_value,
+            user=DBCredDetails.USER.db_cred_value,
+            password=DBCredDetails.PASSWORD.db_cred_value,
             host=DBDetails.HOST.db_value,
             port=DBDetails.PORT.db_value
         )

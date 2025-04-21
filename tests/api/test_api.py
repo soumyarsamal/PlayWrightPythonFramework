@@ -1,6 +1,7 @@
 
 import pytest
 
+from playwrightpython.database.connection_manager import fetch_data_from_postgres
 from playwrightpython.utils.credential_management import LoginCredentials
 from playwrightpython.utils.json_validator import JsonResponseValidator
 
@@ -8,6 +9,12 @@ from playwrightpython.utils.json_validator import JsonResponseValidator
 @pytest.mark.smoke
 def test_get_api(api_client):
     #Login.login_as(LoginCredentials.OPERATOR)
+    query = "SELECT * FROM public.passenger_info;"
+    data = fetch_data_from_postgres(query)
+    print(data)
+    print(data[0]['p_id'])
+
+
     print("Operator Username:", LoginCredentials.OPERATOR.username)
     print("Operator Password:", LoginCredentials.OPERATOR.password)
     print("Senior Operator Username:", LoginCredentials.SENIOR_OPERATOR.username)
