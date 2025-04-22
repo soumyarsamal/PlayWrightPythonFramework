@@ -15,28 +15,35 @@ def playwright_instance():
     with sync_playwright() as playwright:
         yield playwright
 
+
 @pytest.fixture(scope="function")
 def browser(playwright_instance):
-    browser=playwright_instance.chromium.launch(headless=False)
+    launch_options = {"headless": False, "slow_mo": 0}
+    browser = playwright_instance.chromium.launch(**launch_options, args=['--start-maximized'])
     yield browser
     browser.close()
 
+
 @pytest.fixture(scope="function")
 def page(browser):
-    context=browser.new_context()
-    page=context.new_page()
+    context = browser.new_context()
+    page = context.new_page()
     yield page
     context.close()
+
 
 @pytest.fixture(scope="session")
 def api_base_url(config):
     return config["base_uri"]  # Provide the base URL from the config
 
+
 @pytest.fixture(scope="session")
 def api_client(api_base_url):
     return APIClient(base_url=api_base_url)
 
+
 VALID_ENVIRONMENTS = ["dev7", "ift"]
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -52,15 +59,15 @@ def pytest_addoption(parser):
 @pytest.fixture(scope="session")
 def config(request):
     env = request.config.getoption("--env")  # Get the environment from command line
-    #common environment level properties
+    # common environment level properties
     config_file_path = os.path.join(f"playwrightpython/config/{env}", f"{env}.json")
-    environment= 'ift' if 'ift' in env else 'dev'
+    environment = 'ift' if 'ift' in env else 'dev'
 
     # common login credential for dev and ift
-    credential_file_path= os.path.join("playwrightpython/config", f"{environment}_login_credential.json")
+    credential_file_path = os.path.join("playwrightpython/config", f"{environment}_login_credential.json")
 
     # common DB credential for dev and ift
-    db_cred_file_path= os.path.join("playwrightpython/config", f"{environment}_db_credential.json")
+    db_cred_file_path = os.path.join("playwrightpython/config", f"{environment}_db_credential.json")
 
     credentials_data = load_credentials(credential_file_path)
     LoginCredentials.initialize(credentials_data)
@@ -77,9 +84,11 @@ def config(request):
     with open(config_file_path, "r") as file:
         return json.load(file)
 
+
 @pytest.fixture(scope="session")
 def ui_base_url(config):
     return config["url"]  # Provide the base URL from the config
+
 
 @pytest.fixture
 def logged_in_user(request, page, ui_base_url):
@@ -91,7 +100,27 @@ def logged_in_user(request, page, ui_base_url):
         role = LoginCredentials.SENIOR_OPERATOR
 
     if role:
-        login_service = LoginService(page,ui_base_url)
+        login_service = LoginService(page, ui_base_url)
         return login_service.login_as(role)
     else:
         pytest.fail("No valid role found in test marker")
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    # Execute all other hooks to obtain the report object
+    outcome = yield
+    rep = outcome.get_result()
+
+    # Only take screenshot on test failure
+    if rep.when == "call" and rep.failed:
+        page = item.funcargs.get("page", None)
+        if page:
+            # Create directory if it doesn't exist
+            screenshot_dir = "screenshots"
+            os.makedirs(screenshot_dir, exist_ok=True)
+
+            test_name = item.name.replace("/", "_").replace(":", "_")
+            filepath = os.path.join(screenshot_dir, f"{test_name}.png")
+            page.screenshot(path=filepath)
+            print(f"\n📸 Screenshot saved to {filepath}")
