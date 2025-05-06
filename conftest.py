@@ -62,6 +62,7 @@ def config(request):
     # common environment level properties
     config_file_path = os.path.join(f"playwrightpython/config/{env}", f"{env}.json")
     environment = 'ift' if 'ift' in env else 'dev'
+    print("Environment is ---->" +environment)
 
     # common login credential for dev and ift
     credential_file_path = os.path.join("playwrightpython/config", f"{environment}_login_credential.json")

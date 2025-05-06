@@ -1,1 +1,1 @@
-poetry run pytest -m demo --env=dev7 -s -v
+poetry run pytest -m demo --env=dev7 -s -v --alluredir=allure-results

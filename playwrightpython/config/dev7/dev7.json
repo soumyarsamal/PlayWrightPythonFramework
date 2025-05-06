@@ -1,6 +1,6 @@
 {
   "url": "https://practicetestautomation.com/practice-test-login/",
-  "base_uri": "https://reqres.in",
+  "base_uri": "https://reqres.in/api/users/",
   "db_details": {
     "host": "localhost",
     "port": 5432,
